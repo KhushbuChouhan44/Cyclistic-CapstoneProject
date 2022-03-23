@@ -1,0 +1,382 @@
+---
+title: "Cyclistic-Case Study"
+author: "Khushbu Chouhan"
+date: '2022-02-25'
+output:
+  html_document: default
+---
+
+# **Case Study: How Does a Bike-Share Navigate Speedy Success?**
+
+## Introduction
+
+Welcome to the Cyclistic bike-share analysis case study! In this case study, I performed many real-world tasks of a junior data analyst for a fictional company, Cyclistic. In order to answer the key business questions, I followed the steps of the data analysis process: **Ask**,  **Prepare**, **Process**, **Analyze**, **Share** and **Act**. 
+
+## Scenario
+
+Cyclistic, is a bike-share company in Chicago. The director of marketing believes the company’s future success depends on maximizing the number of annual memberships. Therefore, our team wants to understand how casual riders and annual members use Cyclistic bikes differently. From these insights, our team will design a new marketing strategy to convert casual riders into annual members. But first, Cyclistic executives must approve the recommendations, so they must be backed up with compelling data insights and professional data visualizations.
+
+## Characters and teams
+
+● Cyclistic: A bike-share program that features more than 5,800 bicycles and 600 docking stations. Cyclistic sets itself
+apart by also offering reclining bikes, hand tricycles, and cargo bikes, making bike-share more inclusive to people with
+disabilities and riders who can’t use a standard two-wheeled bike. The majority of riders opt for traditional bikes; about
+8% of riders use the assistive options. Cyclistic users are more likely to ride for leisure, but about 30% use them to
+commute to work each day.
+
+● Lily Moreno: The director of marketing and your manager. Moreno is responsible for the development of campaigns
+and initiatives to promote the bike-share program. These may include email, social media, and other channels.
+
+● Cyclistic marketing analytics team: A team of data analysts who are responsible for collecting, analyzing, and
+reporting data that helps guide Cyclistic marketing strategy. You joined this team six months ago and have been busy
+learning about Cyclistic’s mission and business goals — as well as how you, as a junior data analyst, can help Cyclistic
+achieve them.
+
+● Cyclistic executive team: The notoriously detail-oriented executive team will decide whether to approve the
+recommended marketing program.
+
+## Ask
+
+Key tasks
+
+1. Identify the business task.
+
+The primary question to answer which will guide the future marketing program is how do annual members and casual riders use Cyclistic bikes differently? To figure it out we need to study the bike usage behavior of both casual and annual members. After this we have to brainstorm the recommendations from the insights gained which will led to conversion of casual users to annual members.  
+
+2. Consider key stakeholders.
+
+a. Lily Moreno: The director of marketing and manager
+b. Cyclistic executive team
+
+## Prepare
+ 
+This phase addresses where the data is located? How is it organized? Bias and credibility issues in the data along with licensing, privacy, security and accessibility. Does your data **ROCCC**?
+
+For the purpose of this case study Cyclistic’s current trip data of last 12 months i.e. from Feb 2021 to Jan 2022 is used to analyze and identify trends. The data has been made available by Motivate International Inc. under this [license.](https://ride.divvybikes.com/data-license-agreement) This is a public dataset which can be downloaded from [here.](https://divvy-tripdata.s3.amazonaws.com/index.html) The dataset provided were zipped csv formatted files contained monthly trip data. **ROCCC** stands for Reliability, Originality, Comprehensiveness, Current and Cited. As cited above, this data is from a fictional company so we couldn't stand for it's reliability or if it's cited. As for originality this data was acquired by company itself. Sensitive information was not provided, such as names and addresses of users. The data is licensed, private, secure and accessible. Dataset consist of 13 columns and upto 100000's of rows per data file.
+
+Loading required R Packages for data preparation:
+
+```{r loading packages}
+library(tidyverse)
+library(lubridate)
+library(dplyr)
+library(ggplot2)
+library(ggmap)
+library(geosphere)
+```
+
+Reading all the data files.
+
+```{r read data}
+Feb <- read.csv("feb_2021.csv")
+Mar <- read.csv('mar_2021.csv')
+Apr <- read.csv('apr_2021.csv')
+May <- read.csv('may_2021.csv')
+Jun <- read.csv('jun_2021.csv')
+Jul <- read.csv('jul_2021.csv')
+Aug <- read.csv('aug_2021.csv')
+Sep <- read.csv('sep_2021.csv')
+Oct <- read.csv('oct_2021.csv')
+Nov <- read.csv('nov_2021.csv')
+Dec <- read.csv('dec_2021.csv')
+Jan <- read.csv('jan_2022.csv')
+```
+
+Inspecting the structure of all the data files to ensure equal columns and appropriate datatypes.
+
+```{r inspecting column & structure of data files}
+colnames(Jan)
+str(Jan)
+colnames(Feb)
+str(Feb)
+colnames(Mar)
+str(Mar)
+colnames(Apr)
+str(Apr)
+colnames(May)
+str(May)
+colnames(Jun)
+str(Jun)
+colnames(Jul)
+str(Jul)
+colnames(Aug)
+str(Aug)
+colnames(Sep)
+str(Sep)
+colnames(Oct)
+str(Oct)
+colnames(Nov)
+str(Nov)
+colnames(Dec)
+str(Dec)
+```
+Merging all the individual data frames of monthly data into a single data frame.
+
+```{r combining all data into a single data frame}
+trip_data <- bind_rows(Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec, Jan)
+str(trip_data)
+```
+
+## Process
+
+Process the data for analysis which includes checking for data errors, documenting the cleaning process and transforming the data to work with it effectively. As the data is extremely large, R is used as data processing and analysis tool.
+
+```{r inspecting new data frame}
+head(trip_data)    #first 6 rows of data frame
+colnames(trip_data)
+nrow(trip_data)   #no. of rows in data frame
+dim(trip_data)   #dimensions of data frame
+summary(trip_data)   #statistical summary of data mainly for numerics
+str(trip_data)  #list of columns and datatypes
+```
+
+Adding the individual columns for date, day, month, year, day of the week to ease the in-depth analysis.
+
+```{r adding new  columns}
+# Adding columns for date, month, year, day of the week into the data frame
+trip_data$date <- as.Date(trip_data$started_at)
+trip_data$month <- format(as.Date(trip_data$date),"%m")
+trip_data$day <- format(as.Date(trip_data$date),"%d")
+trip_data$year <- format(as.Date(trip_data$date),"%Y")
+trip_data$day_of_week <- format(as.Date(trip_data$date),"%A")
+colnames(trip_data)
+head(trip_data)
+```
+
+Adding a column to calculate the ride duration per ride.
+
+```{r calculate ride length}
+# Adding ride_length column into the data frame
+trip_data$ride_length <- difftime(trip_data$ended_at, trip_data$started_at)
+str(trip_data)
+glimpse(trip_data)
+```
+
+Changing the data type of the ride length column to numeric.
+
+```{r ride length numeric}
+# converting ride_length to numeric 
+trip_data$ride_length <- as.numeric(as.character(trip_data$ride_length))
+is.numeric(trip_data$ride_length)
+glimpse(trip_data)
+```
+
+Inspecting the bad ride length i.e. rides having ride length <=0.
+
+```{r}
+# checking bad ride length
+sum(trip_data$ride_length <= 0)
+nrow(trip_data)
+```
+
+Removing the bad data.
+
+```{r}
+# Removing bad ride length data
+trip_data <- trip_data[!(trip_data$ride_length <= 0),]
+sum(trip_data$ride_length <= 0)
+nrow(trip_data)
+```
+
+Adding another column for different periods in a day i.e. morning, evening, afternoon and night.
+
+```{r adding new column for different time period}
+# Creating breaks 
+breaks <- hour(hm("00:00", "6:00", "12:00", "18:00", "23:59"))
+# labels for the breaks
+labels <- c("Night", "Morning", "Afternoon", "Evening")
+#Defining time of the day(morning, afternoon, evening, night)
+trip_data$time_of_the_trip <- cut(x=hour(trip_data$started_at), breaks = breaks, labels = labels, include.lowest=TRUE)
+colnames(trip_data)
+head(trip_data)
+```
+
+## Analyze
+
+The data has been prepared and processed now ready for descriptive analysis. Analysis includes performing calculations on the cleaned, consistent data and identification of trends, patterns and relationships. 
+
+Performing statistical analysis by calculating mean, median, maximum and minimum on ride length column for both casual riders and members.
+
+```{r mean, median, max, min}
+# finding mean(total ride length/total rides), median(midpoint), max(longest), min(shortest) for ride_length
+trip_data %>% 
+  group_by(member_casual) %>% summarise(average_ride_length = mean(ride_length), median_length = median(ride_length),
+  max_ride_length = max(ride_length), min_ride_length = min(ride_length))
+```
+
+Calculating total no. of rides.
+
+```{r Ride count}
+# total ride taken(ride count) by members and casual riders
+trip_data %>%
+  group_by(member_casual) %>%
+  summarise(ride_count = length(ride_id))
+```
+
+Calculating average ride length and no. of rides as per day of the week.
+
+```{r ridecount by week day}
+# calculating total rides and average ride time by each day for members and  casual riders
+trip_data %>%
+  group_by(member_casual, day_of_week) %>%
+  summarise(number_of_rides = n(),
+            average_ride_length = mean(ride_length),.groups = "drop")
+```
+
+Comparing ride lengths between different times of the day
+
+```{r}
+# Comparing time period(night, morning, evening, day) of ride with ride length for both riders
+trip_data %>%
+  group_by(member_casual, time_of_the_trip) %>%
+  summarise(number_of_rides = n(),
+            average_ride_length = mean(ride_length),.groups = "drop")
+```
+
+
+## Share
+
+In this phase, the gained insights and findings are shared through effective data visualizations. Bar charts are used to share the above analysis.
+
+```{r}
+# Visualizing total rides taken by members and casual riders
+trip_data %>%
+  group_by(member_casual) %>%
+  summarise(ride_count = length(ride_id)) %>%
+   ggplot() + geom_col(mapping = aes(x = member_casual, y = ride_count, fill = member_casual), show.legend = FALSE) +
+  labs(title = "Total no. of rides ")
+```
+
+
+```{r}
+# Visualizing the days of the week with no. of rides taken by riders
+trip_data %>%
+  group_by(member_casual, day_of_week) %>%
+  summarise(number_of_rides = n(), .groups = "drop") %>%
+  arrange(member_casual, day_of_week) %>%
+  ggplot(aes(x = day_of_week, y = number_of_rides, fill = member_casual)) +
+  labs(title = "Total rides vs.day of the week") +
+  geom_col(width = 0.5, position = position_dodge(width = 0.5)) +
+  scale_y_continuous(labels = function(x) format(x,scientific = FALSE))
+```
+
+
+```{r}
+# Visualizing average ride by day of the week
+trip_data %>%
+  group_by(member_casual, day_of_week) %>%
+  summarise(average_ride_length = mean(ride_length), .groups = "drop") %>%
+  ggplot(aes(x = day_of_week, y = average_ride_length, fill = member_casual)) +
+   geom_col(width = 0.5, position = position_dodge(width = 0.5)) +
+  labs(title = "Average ride length vs. day of the week")
+```
+
+
+```{r}
+# visualizing total rides taken by members and casuals by month
+trip_data %>%
+  group_by(member_casual, month) %>%
+  summarise(number_of_rides = n(), .groups = "drop") %>%
+  arrange(member_casual, month) %>%
+  ggplot(aes(x = month, y = number_of_rides, fill = member_casual)) +
+  labs(title = "Total rides vs.month") +
+  geom_col(width = 0.5, position = position_dodge(width = 0.5)) +
+  scale_y_continuous(labels = function(x) format(x,scientific = FALSE))
+```
+
+
+```{r}
+# visualizing average rides by month
+trip_data %>%
+  group_by(member_casual, month) %>%
+  summarise(average_ride_length = mean(ride_length), .groups = "drop") %>%
+  ggplot(aes(x = month, y = average_ride_length, fill = member_casual)) +
+  geom_col(width = 0.5, position = position_dodge(width = 0.5)) +
+  labs(title = "Average ride length vs. month")
+```
+
+
+```{r}
+# visualizing and comparing casual and member rides by distance
+trip_data %>%
+  group_by(member_casual) %>%
+  summarise(average_ride_distance = mean(ride_length)) %>%
+  ggplot() + geom_col(mapping = aes(x = member_casual, y = average_ride_distance, fill = member_casual), show.legend = FALSE) +
+  labs(title = "Mean distance travelled")
+```
+
+
+```{r}
+# Visualizing time period(night, morning, evening, day) of rides with total no. of rides
+trip_data %>%
+  group_by(member_casual, time_of_the_trip) %>%
+  summarise(number_of_rides = n(), .groups = "drop") %>%
+  ggplot() + geom_col(mapping = aes(x = time_of_the_trip, y = number_of_rides, fill = member_casual), show.legend = TRUE) +
+  labs(title = "Total no. of rides vs. the time of the trip")
+```
+
+```{r}
+# Visualizing comparison of total rides with the type of ride
+trip_data %>%
+  group_by(member_casual, rideable_type) %>%
+  summarise(number_of_rides = n(), .groups = "drop") %>%
+ggplot() + geom_col(mapping = aes(x = rideable_type, y = number_of_rides, fill = member_casual), show.legend = TRUE) +
+  labs(title = "Total no. of rides vs. ride type")
+```
+
+
+Visualizing the start and end positions of rides using latitudes and longitudes co-ordinates. 
+
+```{r  map}
+# Visualizing and analyzing on map via latitudes and longitudes 
+
+# Adding a new dataframe only for most popular routes > 200 rides
+coordinates_df <- trip_data %>%
+  filter(start_lat != end_lng & start_lng != end_lat) %>%
+  group_by(start_lng, start_lat, end_lng, end_lat, member_casual, rideable_type) %>%
+  summarise(total_rides = n(), .groups = "drop") %>%
+  filter(total_rides > 200)
+
+casual_riders <- coordinates_df %>%
+  filter(member_casual == "casual")
+member_riders <- coordinates_df %>%
+  filter(member_casual =="member")
+
+# Storing map of Chicago 
+chicago <- c(left = -87.700424, bottom = 41.790769, right = -87.554855, top = 41.990119)
+chicago_map <- get_stamenmap(bbox = chicago, zoom = 12, maptype = "terrain" )
+
+# maps for casual and member riders
+ggmap(chicago_map, darken = c(0.1, "white")) + geom_point(casual_riders, mapping = aes(x = start_lng, y = start_lat, color = rideable_type), size = 2) + coord_fixed(0.8) + labs(title = "Hotspots of casual riders", x=NULL, y=NULL) + theme(legend.position = "Right")
+ggmap(chicago_map, darken = c(0.1,"white")) + geom_point(member_riders, mapping = aes(x = start_lng, y = start_lat, color = rideable_type), size = 2) + coord_fixed(0.8) + labs(title = "Hotspots of member riders",x=NULL, y=NULL) + theme(legend.position = "Right")
+
+```
+
+## Act
+
+Now that we have finished creating visualizations, its time to act on our findings and proposing the top 3 recommendations based on our analysis.
+
+1. Weekend membership : As we found that most of the casual riders prefer riding on weekends more, thus a weekend membership can attract new casual riders as well as the existing ones and also the weekend membership benefits can be used to influence them for extended memberships.
+
+2. Marketing and promotional campaigns : The busiest time of the year for Cyclistic is in the 3rd quarter of the year when rides are on its peak for both type of riders which is the best time for promotional activities and campaigns. Those can be conducted nearby riding hotspots. Classic bikes are used the most thus offerings can be created for those. 
+
+3. Discounts and riding competitions : Cyclistic can organize bike riding competitions with exciting prizes and can offer discounted yearly memberships to the participants. 
+
+Additional data like pricing details etc. could be used to expand our findings and scope of analysis but the provided data is sufficient to conclude our findings and accomplish the business task.
+
+
+
+*Resources-*
+
+*[RStudio](https://www.rstudio.com), [Medium](https://www.medium.com), [Linkedin](https://www.linkedin.com) and [Kaggle](https://www.kaggle.com) community.*
+
+*For ggmap: <http://journal.r-project.org/archive/2013-1/kahle-wickham.pdf>*
+*<https://cran.r-project.org/web/packages/ggmap/citation.html>*
+
+
+
+
+
+
+
+
