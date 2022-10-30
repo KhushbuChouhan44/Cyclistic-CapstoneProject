@@ -17,4 +17,4 @@ RStudio, Medium, Linkedin and Kaggle community.
 
 For ggmap- http://journal.r-project.org/archive/2013-1/kahle-wickham.pdf, https://cran.r-project.org/web/packages/ggmap/citation.html
 
-Hit me a star⭐ right above if you like it!
+Hit me a ⭐ right above if you like it!
